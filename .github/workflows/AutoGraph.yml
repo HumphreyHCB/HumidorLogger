@@ -1,32 +1,24 @@
 name: Generate and Release Plots
 
-# Ensure we have the right permissions for uploading/downloading artifacts and creating releases.
-permissions:
-  contents: write   # Needed for creating releases and pushing tags, etc.
-  packages: write   # Sometimes needed if you publish packages; can be read if not needed.
-
 on:
   push:
     branches:
       - main
   schedule:
-    - cron: '0 */6 * * *'
-  workflow_dispatch:
+    - cron: '0 */6 * * *'  # Runs every 6 hours
+  workflow_dispatch: {}   # Allows you to trigger manually
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Check out the repository
+      - name: Checkout repository
         uses: actions/checkout@v3
-        # If you continue to get 'missing download info' on ubuntu-24.04,
-        # try pinning to a specific commit, e.g.:
-        # uses: actions/checkout@f43a0e5ff2bd294095638e18286ca9a3d1956744
 
-      - name: Set up Python 3.9
+      - name: Setup Python 3.9
         uses: actions/setup-python@v4
         with:
-          python-version: 3.9
+          python-version: '3.9'
 
       - name: Install dependencies
         run: |
@@ -37,8 +29,7 @@ jobs:
         run: python plot_data_extended.py
 
       - name: Upload generated artifacts
-        # By default: actions/upload-artifact@v3
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: generated-plots
           path: |
@@ -46,27 +37,19 @@ jobs:
             Plots/Temperature.pdf
             Plots/summary.csv
 
-        # If you still see 'missing download info' for v3, try pinning to a specific commit SHA:
-        # uses: actions/upload-artifact@5757acb2f6de9124d35d865c61f725a211c59d11
-
   release:
     needs: build
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
     steps:
-      # If you only need the artifacts (no code manipulation), you can omit this checkout.
-      - name: Check out the repository
+      - name: Checkout repository
         uses: actions/checkout@v3
 
       - name: Download artifacts
-        # By default: actions/download-artifact@v3
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: generated-plots
           path: release_files
-
-        # Or pin to a specific commit if needed:
-        # uses: actions/download-artifact@2c1ed0e1761b4ac12d50b49f5f4bf20ab2f1a7b7
 
       - name: Create Release
         id: create_release
