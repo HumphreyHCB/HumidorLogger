@@ -197,9 +197,6 @@ def create_composite_by_mac(devices_data, y_column, composite_title, color_all, 
             ax.text(med_val, 1.12, f"Median: {med_val:.2f}",
                     horizontalalignment='center', color="grey")
 
-        if y_column == "relhum":
-            add_humidity_lines_and_limits(ax)
-
     fig.tight_layout(rect=[0, 0, 1, 0.95])
     return fig
 
