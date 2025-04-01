@@ -4,7 +4,7 @@
 DataCollector.py
 
 This program collects readings from ThermoBeacon devices.
-With the new "autocsv" command, it automatically scans for 25 seconds every 25 minutes,
+With the new "autocsv" command, it automatically scans for 30 seconds every 21 minutes,
 computes a median reading from the scan window for each beacon (based on a mapping file),
 and appends the data as a new row into a CSV file stored in the Data/ folder.
 """
@@ -55,8 +55,8 @@ sub.add_argument('-topic', required=True)
 # New subcommand: autocsv
 sub = subparsers.add_parser('autocsv', help="Automatically scan for 25 seconds every 25 minutes and update CSV files for all beacons")
 sub.add_argument('-m', '--mapping', type=str, default="MacsToNames.json", help="Path to the MacsToNames.json mapping file")
-sub.add_argument('--scan-duration', type=int, default=25, help="Scan duration in seconds (default: 25)")
-sub.add_argument('--cycle-interval', type=int, default=1500, help="Cycle interval in seconds (default: 1500 = 25 minutes)")
+sub.add_argument('--scan-duration', type=int, default=30, help="Scan duration in seconds (default: 30)")
+sub.add_argument('--cycle-interval', type=int, default=1260, help="Cycle interval in seconds (default: 1260 = 21 minutes)")
 
 args = parser.parse_args()
 
