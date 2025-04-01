@@ -123,10 +123,6 @@ def plot_box(df, y_column, title, facecolor, median_color):
 
     ax = plt.gca()
 
-    # If humidity, also show dotted lines and forced y-limits
-    if y_column == "relhum":
-        add_humidity_lines_and_limits(ax)
-
     # Place median label
     if not df[y_column].dropna().empty:
         med_val = df[y_column].median()
