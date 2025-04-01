@@ -1,0 +1,83 @@
+name: Generate and Release Plots
+
+on:
+  push:
+    branches: [ main ]
+  schedule:
+    - cron: '0 */6 * * *'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Python 3.9
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.9
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run plot generation script
+        run: |
+          python plot_data_extended.py
+
+      - name: Archive generated plots and summary
+        uses: actions/upload-artifact@v3
+        with:
+          name: Generated-Plots
+          path: |
+            Plots/Humidity.pdf
+            Plots/Temperature.pdf
+            Plots/summary.csv
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: Generated-Plots
+          path: ./release_files
+
+      - name: Create Release
+        id: create_release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: "plots-$(date +'%Y%m%d')"
+          name: "Plot Release $(date +'%Y-%m-%d')"
+          body: "Automated release of generated plots and summary."
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload Release Asset: Humidity.pdf
+        uses: softprops/action-gh-release@v1
+        with:
+          files: ./release_files/Humidity.pdf
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload Release Asset: Temperature.pdf
+        uses: softprops/action-gh-release@v1
+        with:
+          files: ./release_files/Temperature.pdf
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload Release Asset: summary.csv
+        uses: softprops/action-gh-release@v1
+        with:
+          files: ./release_files/summary.csv
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
