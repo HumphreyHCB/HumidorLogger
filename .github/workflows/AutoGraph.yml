@@ -26,7 +26,7 @@ jobs:
           pip install -r requirements.txt
 
       - name: Run plot generation script
-        run: python plot_data_extended.py
+        run: python Plotter.py
 
       - name: Upload generated artifacts
         uses: actions/upload-artifact@v4
