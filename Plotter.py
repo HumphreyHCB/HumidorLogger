@@ -4,21 +4,25 @@ plot_data_extended.py
 
 This program reads CSV files (one per beacon) from the Data/ folder.
 It loads the beacon mapping from a JSON file (MacsToNames.json),
-then for each beacon it creates:
+then for each beacon it creates individual plots:
   - For Humidity:
-      • A scatter plot of all humidity data.
-      • A scatter plot of humidity data for the last 48 hours.
+      • A scatter plot (with connecting line) of all humidity data.
+      • A scatter plot (with connecting line) of humidity data for the last 48 hours.
       • A box plot (with dark blue and grey styling) of humidity for the last 48 hours,
-        with an annotation of the median value.
+        with a median label (no arrow).
   - For Temperature:
-      • A scatter plot of all temperature data.
-      • A scatter plot of temperature data for the last 48 hours.
+      • A scatter plot (with connecting line) of all temperature data.
+      • A scatter plot (with connecting line) of temperature data for the last 48 hours.
       • A box plot (with dark blue and grey styling) of temperature for the last 48 hours,
-        with an annotation of the median value.
+        with a median label (no arrow).
 All individual plots are saved into two separate PDFs:
   • "Plots/Humidity.pdf" and "Plots/Temperature.pdf"
-Additionally, composite grid pages (one for each metric) are generated showing the “all data”
-scatter plots for all beacons, and a summary CSV ("Plots/summary.csv") is generated.
+Additionally, composite grid pages are generated for each metric – a 3×N grid
+(with each column corresponding to a MAC address and rows corresponding to:
+  row 0: all data scatter,
+  row 1: last 48 hours scatter,
+  row 2: box plot)
+Finally, a summary CSV ("Plots/summary.csv") is generated.
 """
 
 import os
@@ -51,13 +55,14 @@ SUMMARY_CSV = os.path.join(OUTPUT_DIR, "summary.csv")
 
 # Set global font size to 11
 plt.rcParams.update({'font.size': 11})
-# Create a date formatter for the x-axis: day-month hour:minute
+# Date formatter for the x-axis: day-month hour:minute
 date_formatter = mdates.DateFormatter("%d-%m %H:%M")
 
 def plot_scatter(df, y_column, title, color):
-    """Generates a scatter plot for the given y-column."""
+    """Generates a scatter plot with a connecting line for the given y_column."""
     plt.figure(figsize=(12, 8))
     plt.scatter(df["timestamp"], df[y_column], c=color, alpha=0.7, edgecolors="w", s=50)
+    plt.plot(df["timestamp"], df[y_column], c=color, alpha=0.5)
     plt.title(title)
     plt.xlabel("Timestamp")
     plt.ylabel(y_column.capitalize())
@@ -67,7 +72,7 @@ def plot_scatter(df, y_column, title, color):
     plt.tight_layout()
 
 def plot_box(df, y_column, title, facecolor, median_color):
-    """Generates a horizontal box plot for the given y-column with median annotation."""
+    """Generates a horizontal box plot for the given y_column with median label (no arrow)."""
     plt.figure(figsize=(12, 8))
     bp = plt.boxplot(df[y_column].dropna(), vert=False, patch_artist=True,
                      boxprops=dict(facecolor=facecolor, color="black"),
@@ -76,38 +81,59 @@ def plot_box(df, y_column, title, facecolor, median_color):
     plt.xlabel(y_column.capitalize())
     plt.tight_layout()
     med_val = df[y_column].dropna().median()
-    plt.annotate(f"Median: {med_val:.2f}", xy=(med_val, 1), xytext=(med_val, 1.1),
-                 arrowprops=dict(facecolor=median_color, shrink=0.05),
-                 horizontalalignment='center')
+    plt.text(med_val, 1.05, f"Median: {med_val:.2f}", horizontalalignment='center', color=median_color)
 
-def create_composite(scatter_data, y_column, composite_title, point_color):
+def create_composite_by_mac(devices_data, y_column, composite_title, color_all, color_recent):
     """
-    Creates a composite grid figure of scatter plots (all data) for a given y_column.
-    scatter_data is a list of tuples: (friendly_name, dataframe).
-    Returns the figure.
+    Creates a composite grid figure for a given y_column.
+    The grid has 3 rows and N columns (N = number of devices):
+      Row 0: Scatter plot (all data with connecting line)
+      Row 1: Scatter plot (last 48 hours with connecting line)
+      Row 2: Box plot (last 48 hours with median label)
     """
-    n = len(scatter_data)
-    if n == 0:
+    N = len(devices_data)
+    if N == 0:
         return None
-    ncols = 2
-    nrows = math.ceil(n / ncols)
-    fig, axes = plt.subplots(nrows, ncols, figsize=(14, 4 * nrows), squeeze=False)
-    fig.suptitle(composite_title, fontsize=14)
-    for idx, (name, df) in enumerate(scatter_data):
-        row = idx // ncols
-        col = idx % ncols
-        ax = axes[row][col]
-        ax.scatter(df["timestamp"], df[y_column], c=point_color, alpha=0.7, edgecolors="w", s=40)
+    nrows = 3
+    ncols = N
+    fig, axes = plt.subplots(nrows, ncols, figsize=(4 * ncols, 12), squeeze=False)
+    fig.suptitle(composite_title, fontsize=16)
+    for j, (name, df) in enumerate(devices_data):
+        df.sort_values("timestamp", inplace=True)
+        max_time = df["timestamp"].max()
+        cutoff = max_time - timedelta(hours=48)
+        df_recent = df[df["timestamp"] >= cutoff]
+        
+        # Row 0: Scatter plot (all data) with connecting line
+        ax = axes[0][j]
+        ax.scatter(df["timestamp"], df[y_column], c=color_all, alpha=0.7, edgecolors="w", s=40)
+        ax.plot(df["timestamp"], df[y_column], c=color_all, alpha=0.5)
         ax.set_title(name)
         ax.set_xlabel("Timestamp")
         ax.set_ylabel(y_column.capitalize())
         ax.xaxis.set_major_formatter(date_formatter)
         for label in ax.get_xticklabels():
             label.set_rotation(45)
-    for idx in range(n, nrows * ncols):
-        row = idx // ncols
-        col = idx % ncols
-        axes[row][col].axis("off")
+        
+        # Row 1: Scatter plot (last 48 hours) with connecting line
+        ax = axes[1][j]
+        ax.scatter(df_recent["timestamp"], df_recent[y_column], c=color_recent, alpha=0.7, edgecolors="w", s=40)
+        ax.plot(df_recent["timestamp"], df_recent[y_column], c=color_recent, alpha=0.5)
+        ax.set_title(name)
+        ax.set_xlabel("Timestamp")
+        ax.set_ylabel(y_column.capitalize())
+        ax.xaxis.set_major_formatter(date_formatter)
+        for label in ax.get_xticklabels():
+            label.set_rotation(45)
+        
+        # Row 2: Box plot (last 48 hours) with median label (no arrow)
+        ax = axes[2][j]
+        bp = ax.boxplot(df_recent[y_column].dropna(), vert=False, patch_artist=True,
+                        boxprops=dict(facecolor="darkblue", color="black"),
+                        medianprops=dict(color="grey", linewidth=2))
+        ax.set_xlabel(y_column.capitalize())
+        med_val = df_recent[y_column].dropna().median()
+        ax.text(med_val, 1.05, f"Median: {med_val:.2f}", horizontalalignment='center', color="grey")
     fig.tight_layout(rect=[0, 0, 1, 0.95])
     return fig
 
@@ -117,7 +143,7 @@ def main():
     composite_temperature = []  # list of tuples: (name, df)
 
     with PdfPages(OUTPUT_PDF_HUM) as pdf_hum, PdfPages(OUTPUT_PDF_TEMP) as pdf_temp:
-        # Process each device based on mapping
+        # Process each device from mapping
         for mac, name in MAC_MAPPING.items():
             csv_file = os.path.join(DATA_DIR, f"{name}.csv")
             if not os.path.isfile(csv_file):
@@ -137,31 +163,26 @@ def main():
             cutoff = max_time - timedelta(hours=48)
             df_recent = df[df["timestamp"] >= cutoff]
 
-            # -------------------------
-            # Humidity plots (added to Humidity.pdf)
+            # Individual Humidity plots (added to Humidity.pdf)
             plot_scatter(df, "relhum", f"{name} - Humidity (All Data)", "blue")
             pdf_hum.savefig(); plt.close()
             plot_scatter(df_recent, "relhum", f"{name} - Humidity (Last 48 Hours)", "green")
             pdf_hum.savefig(); plt.close()
-            plot_box(df_recent, "relhum", f"{name} - Humidity Box Plot (Last 48 Hours)",
-                     facecolor="darkblue", median_color="grey")
+            plot_box(df_recent, "relhum", f"{name} - Humidity Box Plot (Last 48 Hours)", "darkblue", "grey")
             pdf_hum.savefig(); plt.close()
 
-            # -------------------------
-            # Temperature plots (added to Temperature.pdf)
+            # Individual Temperature plots (added to Temperature.pdf)
             plot_scatter(df, "temp", f"{name} - Temperature (All Data)", "red")
             pdf_temp.savefig(); plt.close()
             plot_scatter(df_recent, "temp", f"{name} - Temperature (Last 48 Hours)", "orange")
             pdf_temp.savefig(); plt.close()
-            plot_box(df_recent, "temp", f"{name} - Temperature Box Plot (Last 48 Hours)",
-                     facecolor="darkblue", median_color="grey")
+            plot_box(df_recent, "temp", f"{name} - Temperature Box Plot (Last 48 Hours)", "darkblue", "grey")
             pdf_temp.savefig(); plt.close()
 
-            # Append full-data for composite figures
             composite_humidity.append((name, df))
             composite_temperature.append((name, df))
 
-            # Compute summary statistics for all data (for both metrics)
+            # Compute summary statistics (all data)
             hum_median = df["relhum"].median()
             hum_min = df["relhum"].min()
             hum_max = df["relhum"].max()
@@ -178,23 +199,22 @@ def main():
                 "temperature_min": temp_min,
                 "temperature_max": temp_max
             })
-            print(f"Plots and summary for {name} generated.")
+            print(f"Individual plots and summary for {name} generated.")
 
-        # Create composite grid plots and add them to the respective PDFs.
+        # Create composite grids (3 rows x N columns) and add them to the PDFs.
         if composite_humidity:
-            fig_hum = create_composite(composite_humidity, "relhum", 
-                                       "Composite Scatter Plots for Humidity (All Data)", "blue")
-            if fig_hum:
-                pdf_hum.savefig(fig_hum)
-                plt.close(fig_hum)
+            fig_hum_comp = create_composite_by_mac(composite_humidity, "relhum",
+                                                   "Composite Plots by MAC for Humidity", "blue", "green")
+            if fig_hum_comp:
+                pdf_hum.savefig(fig_hum_comp)
+                plt.close(fig_hum_comp)
         if composite_temperature:
-            fig_temp = create_composite(composite_temperature, "temp", 
-                                        "Composite Scatter Plots for Temperature (All Data)", "red")
-            if fig_temp:
-                pdf_temp.savefig(fig_temp)
-                plt.close(fig_temp)
+            fig_temp_comp = create_composite_by_mac(composite_temperature, "temp",
+                                                    "Composite Plots by MAC for Temperature", "red", "orange")
+            if fig_temp_comp:
+                pdf_temp.savefig(fig_temp_comp)
+                plt.close(fig_temp_comp)
 
-    # Write the summary CSV
     if summary_rows:
         summary_df = pd.DataFrame(summary_rows)
         summary_df.to_csv(SUMMARY_CSV, index=False)
