@@ -5,6 +5,10 @@ on:
     branches:
       - master
 
+# IMPORTANT: We need write permission to create/push tags and make releases
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -47,23 +51,41 @@ jobs:
           name: generated-plots
           path: release_files
 
-      # STEP 1: Generate a date/time string for the tag
+      # STEP A: Generate a date/time string for the tag
       - name: Get timestamp
         id: get_timestamp
         run: echo "tag_name=plots-$(date +'%Y-%m-%d_%H-%M-%S')" >> $GITHUB_OUTPUT
 
-      # STEP 2: Use that tag_name output in the GH Release step
+      # STEP B: Create + push the tag to GitHub
+      - name: Push Tag to Remote
+        id: push_tag
+        run: |
+          TAG="${{ steps.get_timestamp.outputs.tag_name }}"
+          echo "Tag to push: $TAG"
+
+          # Use the GitHub Actions actor for name & email
+          git config user.name "${{ github.actor }}"
+          git config user.email "${{ github.actor }}@users.noreply.github.com"
+
+          # Create local tag
+          git tag "$TAG"
+
+          # Push the new tag to origin
+          git push origin "$TAG"
+
+      # STEP C: Create the GitHub Release
       - name: Create Release
         id: create_release
         uses: softprops/action-gh-release@v1
         with:
+          # Use the same tag we just pushed
           tag_name: ${{ steps.get_timestamp.outputs.tag_name }}
           name: "Plot Release ${{ steps.get_timestamp.outputs.tag_name }}"
-          body: 'Automated release of generated plots and summary.'
+          body: "Automated release of generated plots and summary."
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      # STEP 3: Upload each file to the release
+      # STEP D: Upload each file to the Release
       - name: Upload Release Asset Humidity.pdf
         uses: softprops/action-gh-release@v1
         with:
