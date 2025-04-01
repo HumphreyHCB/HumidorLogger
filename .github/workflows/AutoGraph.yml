@@ -3,7 +3,7 @@ name: Generate and Release Plots
 on:
   push:
     branches:
-      - main
+      - master
   schedule:
     - cron: '*/11 * * * *'
 
