@@ -6,7 +6,7 @@ on:
       - main
   schedule:
     - cron: '0 */6 * * *'  # Runs every 6 hours
-  workflow_dispatch: {}   # Allows you to trigger manually
+  workflow_dispatch: {}
 
 jobs:
   build:
@@ -58,6 +58,8 @@ jobs:
           tag_name: 'plots-${{ github.run_number }}'
           name: 'Plot Release ${{ github.run_number }}'
           body: 'Automated release of generated plots and summary.'
+          # draft: false         # (default)
+          # prerelease: false    # (default)
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
