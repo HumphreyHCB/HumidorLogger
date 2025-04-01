@@ -29,7 +29,7 @@ jobs:
         run: python plot_data_extended.py
 
       - name: Upload generated artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v2
         with:
           name: generated-plots
           path: |
@@ -46,7 +46,7 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Download artifacts
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v2
         with:
           name: generated-plots
           path: release_files
