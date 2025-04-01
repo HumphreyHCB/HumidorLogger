@@ -47,18 +47,23 @@ jobs:
           name: generated-plots
           path: release_files
 
+      # STEP 1: Generate a date/time string for the tag
+      - name: Get timestamp
+        id: get_timestamp
+        run: echo "tag_name=plots-$(date +'%Y-%m-%d_%H-%M-%S')" >> $GITHUB_OUTPUT
+
+      # STEP 2: Use that tag_name output in the GH Release step
       - name: Create Release
         id: create_release
         uses: softprops/action-gh-release@v1
         with:
-          tag_name: 'plots-${{ github.run_number }}'
-          name: 'Plot Release ${{ github.run_number }}'
+          tag_name: ${{ steps.get_timestamp.outputs.tag_name }}
+          name: "Plot Release ${{ steps.get_timestamp.outputs.tag_name }}"
           body: 'Automated release of generated plots and summary.'
-          # draft: false         # (default)
-          # prerelease: false    # (default)
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      # STEP 3: Upload each file to the release
       - name: Upload Release Asset Humidity.pdf
         uses: softprops/action-gh-release@v1
         with:
