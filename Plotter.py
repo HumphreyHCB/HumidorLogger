@@ -265,6 +265,10 @@ def main():
             cutoff = max_time - timedelta(hours=48)
             df_recent = df[df["timestamp"] >= cutoff]
 
+            # For composite multi-device plots
+            composite_humidity.append((name, df))
+            composite_temperature.append((name, df))
+
             # HUMIDITY PDF
             plot_scatter(df, "relhum", f"{name} - Humidity (All Data)", "blue")
             pdf_hum.savefig()
@@ -290,10 +294,6 @@ def main():
             plot_box(df_recent, "temp", f"{name} - Temperature Box Plot (Last 48 Hours)", "darkblue", "grey")
             pdf_temp.savefig()
             plt.close()
-
-            # For composite multi-device plots
-            composite_humidity.append((name, df))
-            composite_temperature.append((name, df))
 
             print(f"Individual plots and summary for {name} generated.")
 
