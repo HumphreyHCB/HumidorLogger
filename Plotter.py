@@ -60,7 +60,7 @@ def get_axis_label(y_column: str) -> str:
 # -------------------------------------------------------------
 def add_humidity_lines_and_limits(ax):
     ax.axhline(60, color='gray', linestyle='--', alpha=0.8)
-    ax.axhline(70, color='gray', linestyle='--', alpha=0.8)
+    ax.axhline(75, color='gray', linestyle='--', alpha=0.8)
     current_min, current_max = ax.get_ylim()
     base_min, base_max = 55, 80
     new_min = min(current_min, base_min)
@@ -145,8 +145,6 @@ def create_composite_by_mac(devices_data, y_column, composite_title, color_all, 
             med_val = df_recent[y_column].median()
             ax.text(med_val, 1.12, f"Median: {med_val:.2f}",
                     horizontalalignment='center', color="grey")
-        if y_column == "relhum":
-            add_humidity_lines_and_limits(ax)
 
     fig.tight_layout(rect=[0, 0, 1, 0.95])
     return fig
