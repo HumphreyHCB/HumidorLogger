@@ -34,6 +34,8 @@ Humidor Logger is a simple repository that collects humidity and temperature dat
   Maps beacon MAC addresses to friendly device names.
 - **plot_data_extended.py**  
   Main Python script for processing CSV data and creating plots.
+- **Services/**  
+  Contains Services for automation.
 
 ## Getting the Latest Plots
 
