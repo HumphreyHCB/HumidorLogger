@@ -1,0 +1,9 @@
+[Unit]
+Description=Run auto_push.service every day at 10 minutes past each hour
+
+[Timer]
+OnCalendar=*-*-* 0/6:10:00
+Persistent=true
+
+[Install]
+WantedBy=multi-user.target

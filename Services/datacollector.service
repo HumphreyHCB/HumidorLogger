@@ -1,0 +1,12 @@
+[Unit]
+Description=ThermoBeacon Data Collector Service
+After=network.target bluetooth.target
+
+[Service]
+ExecStart=/usr/bin/python3 /path/to/HumidorLogger/DataCollector.py autocsv
+WorkingDirectory=/path/to/HumidorLogger
+Restart=always
+User=
+
+[Install]
+WantedBy=multi-user.target

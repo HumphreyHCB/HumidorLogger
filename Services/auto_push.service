@@ -1,0 +1,10 @@
+[Unit]
+Description=Auto Push Service
+# This runs a script that commits/pushes to GitHub.
+
+[Service]
+Type=oneshot
+User=Humphrey
+WorkingDirectory=/path/to/HumidorLogger
+# The command below runs your script and appends all output to a log file.
+ExecStart=/usr/bin/bash -c '/path/to/HumidorLogger/auto_push.sh >> /path/to/HumidorLogger/auto_push.log 2>&1'
