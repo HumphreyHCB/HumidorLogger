@@ -240,42 +240,6 @@ def main():
                 pdf_temp.savefig(fig_temp_comp)
                 plt.close(fig_temp_comp)
 
-        # --- C) Then do Individual Plots for each device ---
-        for mac, name, df in all_data:
-            print(f"Generating individual plots for {name}...")
-
-            max_time = df["timestamp"].max()
-            cutoff = max_time - timedelta(hours=48)
-            df_recent = df[df["timestamp"] >= cutoff]
-
-            # HUMIDITY PDF
-            plot_scatter(df, "relhum", f"{name} - Humidity (All Data)", "blue")
-            pdf_hum.savefig()
-            plt.close()
-
-            plot_scatter(df_recent, "relhum", f"{name} - Humidity (Last 48 Hours)", "green")
-            pdf_hum.savefig()
-            plt.close()
-
-            plot_box(df_recent, "relhum", f"{name} - Humidity Box Plot (Last 48 Hours)", "darkblue", "grey")
-            pdf_hum.savefig()
-            plt.close()
-
-            # TEMPERATURE PDF
-            plot_scatter(df, "temp", f"{name} - Temperature (All Data)", "red")
-            pdf_temp.savefig()
-            plt.close()
-
-            plot_scatter(df_recent, "temp", f"{name} - Temperature (Last 48 Hours)", "orange")
-            pdf_temp.savefig()
-            plt.close()
-
-            plot_box(df_recent, "temp", f"{name} - Temperature Box Plot (Last 48 Hours)", "darkblue", "grey")
-            pdf_temp.savefig()
-            plt.close()
-
-            print(f"Individual plots for {name} generated.")
-
     print(f"Humidity plots saved to {OUTPUT_PDF_HUM}")
     print(f"Temperature plots saved to {OUTPUT_PDF_TEMP}")
 
