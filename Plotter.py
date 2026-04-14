@@ -111,6 +111,9 @@ def create_composite_by_mac(devices_data, y_column, composite_title, color_all, 
 
         # Row 0: ALL data scatter
         ax = axes[0][j]
+
+        df_plot = df.iloc[::20]  # 👈 take every 20th point
+        
         ax.scatter(df["timestamp"], df[y_column], c=color_all, alpha=0.7, edgecolors="w", s=40)
         ax.plot(df["timestamp"], df[y_column], c=color_all, alpha=0.5)
         ax.set_title(name)
