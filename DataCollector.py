@@ -15,6 +15,7 @@ import bleak
 import paho.mqtt.client as mqtt
 from bleak import BleakClient, BleakScanner
 from tb_protocol import *
+import pandas as pd
 
 # BLE characteristic UUIDs
 TX_CHAR_UUID = '0000fff5-0000-1000-8000-00805F9B34FB'
@@ -174,10 +175,15 @@ async def autocsv_loop(mapping_file, scan_duration, cycle_interval):
                 write_header = not os.path.isfile(csv_filename)
                 try:
                     with open(csv_filename, 'a', newline='') as csvfile:
-                        writer = csv.DictWriter(csvfile, fieldnames=["timestamp", "mac", "temp", "relhum", "button", "battery", "uptime"])
+                        writer = csv.DictWriter(
+                            csvfile,
+                            fieldnames=["timestamp", "mac", "temp", "relhum", "button", "battery", "uptime"]
+                        )
                         if write_header:
                             writer.writeheader()
                         writer.writerow(row)
+
+                    prune_csv_to_last_months(csv_filename, months=6)
                     print(f"Updated CSV for {friendly_name} with new row at {now}")
                 except Exception as e:
                     print(f"Error writing to {csv_filename}: {e}")
@@ -225,6 +231,23 @@ def query(address, duration):
 
 def send_mqtt(address, duration, broker, port, topic):
     print(f"MQTT {address}")
+
+def prune_csv_to_last_months(csv_filename, months=6):
+    """Keep only rows from the last `months` months."""
+    try:
+        if not os.path.isfile(csv_filename):
+            return
+
+        df = pd.read_csv(csv_filename, parse_dates=["timestamp"])
+        if df.empty:
+            return
+
+        cutoff = pd.Timestamp.now() - pd.DateOffset(months=months)
+        df = df[df["timestamp"] >= cutoff]
+
+        df.to_csv(csv_filename, index=False)
+    except Exception as e:
+        print(f"Error pruning {csv_filename}: {e}")
 
 # --- Main function ---
 

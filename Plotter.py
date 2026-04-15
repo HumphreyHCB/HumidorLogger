@@ -106,16 +106,18 @@ def create_composite_by_mac(devices_data, y_column, composite_title, color_all, 
     for j, (name, df) in enumerate(devices_data):
         df.sort_values("timestamp", inplace=True)
         max_time = df["timestamp"].max()
-        cutoff = max_time - timedelta(hours=48)
-        df_recent = df[df["timestamp"] >= cutoff]
 
-        # Row 0: ALL data scatter
+        cutoff_48h = max_time - timedelta(hours=48)
+        df_recent = df[df["timestamp"] >= cutoff_48h]
+
+        cutoff_30d = max_time - timedelta(days=30)
+        df_last_month = df[df["timestamp"] >= cutoff_30d]
+        df_plot = df_last_month.iloc[::20]
+
+        # Row 0: last month, every 20th point
         ax = axes[0][j]
-
-        df_plot = df.iloc[::20]  # 👈 take every 20th point
-        
-        ax.scatter(df["timestamp"], df[y_column], c=color_all, alpha=0.7, edgecolors="w", s=40)
-        ax.plot(df["timestamp"], df[y_column], c=color_all, alpha=0.5)
+        ax.scatter(df_plot["timestamp"], df_plot[y_column], c=color_all, alpha=0.7, edgecolors="w", s=40)
+        ax.plot(df_plot["timestamp"], df_plot[y_column], c=color_all, alpha=0.5)
         ax.set_title(name)
         ax.set_xlabel("Timestamp")
         ax.set_ylabel(get_axis_label(y_column))
