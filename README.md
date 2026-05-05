@@ -1,6 +1,6 @@
 # Humidor Logger
 
-Humidor Logger is a simple repository that collects humidity and temperature data from multiple sensors, then automatically generates and publishes plots **every hour** using GitHub Actions.
+Humidor Logger is a simple repository that collects humidity and temperature data from multiple sensors, then automatically generates and publishes plots **every 12 hours** using GitHub Actions.
 
 ## Overview
 
