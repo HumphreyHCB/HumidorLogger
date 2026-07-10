@@ -2,4 +2,4 @@ mac,name,humidity_median,humidity_min,humidity_max,temperature_median,temperatur
 4f:d1:00:00:00:65,Daddy Bear,59.375,53.5625,79.6875,18.25,12.5,34.4375
 4f:bb:00:00:02:0f,Mummy Bear,62.9375,44.0,76.25,19.4375,-37.5,34.0
 4f:bb:00:00:05:ed,Baby Bear,58.1875,47.625,96.8125,19.0,12.625,34.375
-73:06:00:00:05:ca,Humphreys Beacon,60.375,52.875,88.75,19.125,13.0,35.0
+73:06:00:00:05:ca,Humphreys Beacon,60.328125,52.875,88.75,19.125,13.0,35.0
